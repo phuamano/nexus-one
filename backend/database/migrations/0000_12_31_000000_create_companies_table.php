@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('legal_name')->nullable();
             $table->string('tax_id')->nullable();
 
-            $table->string('email');
+            $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();
             $table->string('website')->nullable();
 
