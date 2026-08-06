@@ -128,6 +128,8 @@
       <path value="$PROJECT_DIR$/backend/vendor/nette/schema" />
       <path value="$PROJECT_DIR$/backend/vendor/nette/utils" />
       <path value="$PROJECT_DIR$/backend/vendor/_laravel_idea" />
+      <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-package-tools" />
+      <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-permission" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.3">

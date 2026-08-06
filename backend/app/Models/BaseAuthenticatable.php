@@ -10,4 +10,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 abstract class BaseAuthenticatable extends Authenticatable
 {
     use HasUuids;
+    public $incrementing = false;
+    protected $keyType = 'string';
 }
