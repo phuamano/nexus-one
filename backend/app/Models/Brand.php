@@ -1,16 +1,15 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ProductCategory extends TenantModel
+class Brand extends TenantModel
 {
-    /** @use HasFactory<\Database\Factories\ProductCategoryFactory> */
+    /** @use HasFactory<\Database\Factories\BrandFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -20,7 +19,7 @@ class ProductCategory extends TenantModel
         'is_active',
     ];
 
-    protected  $casts = [
+    protected $casts = [
         'is_active' => 'boolean',
     ];
 

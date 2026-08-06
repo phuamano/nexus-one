@@ -6,31 +6,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ProductCategory extends TenantModel
+class Warehouse extends TenantModel
 {
-    /** @use HasFactory<\Database\Factories\ProductCategoryFactory> */
     use HasFactory;
 
     protected $fillable = [
         'company_id',
         'name',
+        'code',
+        'address',
         'description',
         'is_active',
     ];
 
-    protected  $casts = [
+    protected $casts = [
         'is_active' => 'boolean',
     ];
 
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
-    }
-
-    public function products(): HasMany
-    {
-        return $this->hasMany(Product::class);
     }
 }

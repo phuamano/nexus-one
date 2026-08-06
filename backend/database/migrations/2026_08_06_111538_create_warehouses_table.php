@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_categories', function (Blueprint $table) {
+        Schema::create('warehouses', function (Blueprint $table) {
+
             $table->uuid('id')->primary();
 
             $table->foreignUuid('company_id')
@@ -19,13 +20,21 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('name');
+
+            $table->string('code', 20);
+
+            $table->string('address')->nullable();
+
             $table->text('description')->nullable();
 
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();
 
+            $table->unique(['company_id', 'code']);
             $table->unique(['company_id', 'name']);
+
+            $table->index('company_id');
             $table->index('is_active');
         });
     }
@@ -35,6 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_categories');
+        Schema::dropIfExists('warehouses');
     }
 };

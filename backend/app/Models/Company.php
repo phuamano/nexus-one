@@ -26,4 +26,22 @@ class Company extends BaseModel
     {
         return $this->hasMany(User::class);
     }
+
+    public function productCategories(): HasMany
+    {
+        return $this->hasMany(ProductCategory::class);
+    }
+
+    public function brands(): HasMany
+    {
+        return $this->hasMany(Brand::class);
+    }
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class);
+    }
+    public function warehouses(): HasMany
+    {
+        return $this->hasMany(Warehouse::class);
+    }
 }

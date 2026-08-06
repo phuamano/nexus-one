@@ -11,3 +11,6 @@ fix-permissions:
 	find backend -name "*.sh" -exec chmod +x {} +
 	sudo chown -R www-data:www-data backend/storage backend/bootstrap/cache
 	sudo chmod -R 775 backend/storage backend/bootstrap/cache
+
+migrate:
+	php artisan migrate

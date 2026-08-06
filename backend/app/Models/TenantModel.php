@@ -11,12 +11,11 @@ abstract class TenantModel extends BaseModel
 {
     protected static function boot(): void
     {
-        parent::booted();
+        parent::boot();
 
         static::addGlobalScope(
             app(CompanyScope::class)
         );
-
 
         static::creating(function (TenantModel $model): void {
 
