@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends TenantModel
 {
@@ -52,5 +53,24 @@ class Product extends TenantModel
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
+    public function stockInWarehouse(Warehouse $warehouse): float
+    {
+        return $this->inventoryMovements()
+            ->where('warehouse_id', $warehouse->id)
+            ->selectRaw("
+            SUM(
+                CASE
+                    WHEN direction = 'in' THEN quantity
+                    WHEN direction = 'out' THEN -quantity
+                END
+            ) as stock
+        ")
+            ->value('stock') ?? 0;
     }
 }
