@@ -21,7 +21,8 @@ return new class extends Migration
             $table->foreignUuid('tax_id')
                 ->constrained()
                 ->cascadeOnDelete();
-            $table->string('email')->unique();
+            $table->string('email');
+            $table->unique(['company_id', 'email']);
             $table->string('phone');
             $table->string('address');
             $table->boolean('is_active')->default(true);

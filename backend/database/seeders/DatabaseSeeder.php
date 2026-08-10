@@ -3,23 +3,55 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Auth;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        /*
+        |--------------------------------------------------------------------------
+        | Company & User
+        |--------------------------------------------------------------------------
+        */
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            CompanySeeder::class,
+            UserSeeder::class,
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Authenticate tenant user
+        |--------------------------------------------------------------------------
+        */
+
+        $user = User::where('email', 'admin@test.com')->firstOrFail();
+
+        Auth::login($user);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tenant data
+        |--------------------------------------------------------------------------
+        */
+
+        $this->call([
+            PermissionSeeder::class,
+
+            UnitSeeder::class,
+            BrandSeeder::class,
+            ProductCategorySeeder::class,
+            WarehouseSeeder::class,
+            ProductSeeder::class,
+
+            TaxSeeder::class,
+            SupplierSeeder::class,
+            PurchaseSeeder::class,
         ]);
     }
 }

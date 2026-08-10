@@ -130,6 +130,7 @@
       <path value="$PROJECT_DIR$/backend/vendor/_laravel_idea" />
       <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-package-tools" />
       <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-permission" />
+      <path value="$PROJECT_DIR$/backend/vendor/laravel/sanctum" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.3">
