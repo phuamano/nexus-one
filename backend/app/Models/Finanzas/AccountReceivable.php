@@ -11,6 +11,7 @@ use App\Models\Ventas\Customer;
 use App\Models\Ventas\Sale;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'company_id',
@@ -46,5 +47,11 @@ class AccountReceivable extends TenantModel
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+    public function payments(): HasMany
+    {
+        return $this->hasMany(
+            ReceivablePayment::class
+        );
     }
 }
