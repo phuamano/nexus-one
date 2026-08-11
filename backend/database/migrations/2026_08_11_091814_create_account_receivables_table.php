@@ -61,6 +61,12 @@ return new class extends Migration
                 'company_id',
                 'sale_id',
             ]);
+
+            $table->index([
+                'company_id',
+                'customer_id',
+                'due_date',
+            ]);
         });
     }
 

@@ -7,11 +7,16 @@ use App\Enums\Ventas\SaleStatus;
 use App\Models\InventoryMovement;
 use App\Models\Ventas\Sale;
 use App\Models\Ventas\SaleItem;
+use App\Services\Finanzas\AccountReceivableService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SaleService
 {
+    public function __construct(
+        private readonly AccountReceivableService $accountReceivableService,
+    ) {
+    }
     /**
      * Crea una venta en estado borrador.
      */
@@ -92,6 +97,10 @@ class SaleService
             $sale->update([
                 'status' => SaleStatus::CONFIRMED,
             ]);
+
+
+            $this->accountReceivableService
+                ->createFromSale($sale);
 
             return $sale->fresh([
                 'customer',
