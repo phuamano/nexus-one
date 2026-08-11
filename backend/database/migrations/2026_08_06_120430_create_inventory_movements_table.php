@@ -43,7 +43,7 @@ return new class extends Migration
              * Referencia al documento origen:
              * Purchase, Sale, Transfer, etc.
              */
-            $table->nullableMorphs('reference');
+            $table->nullableUuidMorphs('reference');
 
 
             $table->text('notes')->nullable();
