@@ -56,14 +56,6 @@ class StorePurchaseRequest extends FormRequest
                 'max:255',
             ],
 
-            'status' => [
-                'required',
-                'status' => [
-                    'required',
-                    new Enum(PurchaseStatus::class),
-                ],
-            ],
-
             'notes' => [
                 'nullable',
                 'string',

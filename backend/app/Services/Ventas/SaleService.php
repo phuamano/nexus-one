@@ -98,7 +98,6 @@ class SaleService
                 'status' => SaleStatus::CONFIRMED,
             ]);
 
-
             $this->accountReceivableService
                 ->createFromSale($sale);
 
