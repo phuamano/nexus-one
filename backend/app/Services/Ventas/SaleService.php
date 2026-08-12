@@ -88,6 +88,7 @@ class SaleService
 
             $sale->load([
                 'saleItems.product',
+                'warehouse',
             ]);
 
             $this->validateStock($sale);
@@ -169,11 +170,16 @@ class SaleService
 
         foreach ($items as $item) {
             if (
-                ! isset($item['product']) ||
-                ! isset($item['warehouse'])
+                ! isset($item['product_id']) ||
+                ! isset($item['tax_id']) ||
+                ! isset($item['quantity']) ||
+                ! isset($item['unit_price']) ||
+                ! isset($item['tax_amount']) ||
+                ! isset($item['subtotal']) ||
+                ! isset($item['total'])
             ) {
                 throw ValidationException::withMessages([
-                    'items' => 'Cada producto debe incluir su instancia de producto y almacén.',
+                    'items' => 'Cada producto debe incluir product_id, tax_id, quantity, unit_price, tax_amount, subtotal y total.',
                 ]);
             }
         }
@@ -234,5 +240,63 @@ class SaleService
                 'user_id' => $sale->user_id,
             ]);
         }
+    }
+
+    public function update(Sale $sale, array $data): Sale
+    {
+        return DB::transaction(function () use ($sale, $data) {
+
+            if ($sale->status !== SaleStatus::DRAFT) {
+                throw ValidationException::withMessages([
+                    'status' => 'Solo se pueden actualizar ventas en estado borrador.',
+                ]);
+            }
+
+            $items = $data['items'] ?? [];
+
+            $this->validateItems($items);
+
+            $subtotal = 0;
+            $tax = 0;
+
+            foreach ($items as $item) {
+                $subtotal += (float) $item['subtotal'];
+                $tax += (float) $item['tax_amount'];
+            }
+
+            $sale->update([
+                'customer_id' => $data['customer_id'],
+                'warehouse_id' => $data['warehouse_id'],
+                'sale_date' => $data['sale_date'],
+                'reference' => $data['reference'] ?? null,
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'total' => $subtotal + $tax,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            $sale->saleItems()->delete();
+
+            foreach ($items as $item) {
+                $sale->saleItems()->create([
+                    'product_id' => $item['product_id'],
+                    'tax_id' => $item['tax_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'tax_amount' => $item['tax_amount'],
+                    'subtotal' => $item['subtotal'],
+                    'total' => $item['total'],
+                ]);
+            }
+
+            return $sale->fresh([
+                'customer',
+                'warehouse',
+                'user',
+                'saleItems.product',
+                'saleItems.tax',
+                'inventoryMovements',
+            ]);
+        });
     }
 }
