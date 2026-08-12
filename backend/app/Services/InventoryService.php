@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
@@ -47,8 +48,20 @@ class InventoryService
         float $quantity,
         ?User $user = null,
         ?string $notes = null,
-    ): void
-    {
+    ): void {
+        $available = $product->stockInWarehouse($warehouse);
+
+        if ($available < $quantity) {
+            throw ValidationException::withMessages([
+                'quantity' => sprintf(
+                    'Stock insuficiente para %s. Disponible: %s, solicitado: %s.',
+                    $product->name,
+                    $available,
+                    $quantity
+                ),
+            ]);
+        }
+
         $this->createMovement(
             $product,
             $warehouse,

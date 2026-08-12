@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Compras\PurchaseController;
 use App\Http\Controllers\Finanzas\PayablePaymentController;
 use App\Http\Controllers\Finanzas\ReceivablePaymentController;
+use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Ventas\SaleController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,5 +35,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post(
         'account-receivables/{id}/payments',
         [ReceivablePaymentController::class, 'store']
+    );
+
+    Route::post('/inventory/entries', [InventoryController::class, 'entry']);
+    Route::post('/inventory/exits', [InventoryController::class, 'exit']);
+    Route::post('/inventory/adjustments', [InventoryController::class, 'adjustment']);
+    Route::post('/inventory/transfers', [InventoryController::class, 'transfer']);
+
+    Route::get(
+        '/inventory/{product}/stock/{warehouse}',
+        [InventoryController::class, 'stock']
+    );
+
+    Route::get(
+        '/inventory/{product}/kardex',
+        [InventoryController::class, 'kardex']
+    );
+
+    Route::get(
+        '/inventory/low-stock',
+        [InventoryController::class, 'lowStock']
     );
 });
