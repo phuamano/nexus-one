@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Model;
 
 class InventoryService
 {
@@ -29,8 +30,15 @@ class InventoryService
         float $quantity,
         ?User $user = null,
         ?string $notes = null,
-    ): void
-    {
+        ?Model $reference = null,
+    ): void {
+
+        if ($quantity <= 0) {
+            throw ValidationException::withMessages([
+                'quantity' => 'La cantidad debe ser mayor que cero.',
+            ]);
+        }
+
         $this->createMovement(
             $product,
             $warehouse,
@@ -39,6 +47,7 @@ class InventoryService
             $quantity,
             $user,
             $notes,
+            $reference,
         );
     }
 
@@ -48,6 +57,7 @@ class InventoryService
         float $quantity,
         ?User $user = null,
         ?string $notes = null,
+        ?Model $reference = null,
     ): void {
         $available = $product->stockInWarehouse($warehouse);
 
@@ -70,6 +80,7 @@ class InventoryService
             $quantity,
             $user,
             $notes,
+            $reference,
         );
     }
 
@@ -80,8 +91,15 @@ class InventoryService
         InventoryMovementDirection $direction,
         ?User $user = null,
         ?string $notes = null,
-    ): void
-    {
+    ): void {
+        if ($direction === InventoryMovementDirection::Out) {
+            $this->validateStock(
+                $product,
+                $warehouse,
+                $quantity
+            );
+        }
+
         $this->createMovement(
             $product,
             $warehouse,
@@ -100,8 +118,7 @@ class InventoryService
         float $quantity,
         ?User $user = null,
         ?string $notes = null,
-    ): void
-    {
+    ): void {
         DB::transaction(function () use (
             $product,
             $fromWarehouse,
@@ -110,6 +127,32 @@ class InventoryService
             $user,
             $notes,
         ) {
+
+            if ($quantity <= 0) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'La cantidad debe ser mayor que cero.',
+                ]);
+            }
+
+            if ($fromWarehouse->id === $toWarehouse->id) {
+                throw ValidationException::withMessages([
+                    'warehouse' => 'El almacén de origen y destino deben ser diferentes.',
+                ]);
+            }
+
+            $available = $product->stockInWarehouse($fromWarehouse);
+
+            if ($available < $quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => sprintf(
+                        'Stock insuficiente para %s en %s. Disponible: %s, solicitado: %s.',
+                        $product->name,
+                        $fromWarehouse->name,
+                        $available,
+                        $quantity
+                    ),
+                ]);
+            }
 
             $this->createMovement(
                 $product,
@@ -130,7 +173,6 @@ class InventoryService
                 $user,
                 $notes,
             );
-
         });
     }
 
@@ -141,16 +183,65 @@ class InventoryService
         InventoryMovementDirection $direction,
         float $quantity,
         ?User $user,
-        ?string $notes,)
-    {
+        ?string $notes,
+        ?Model $reference = null,
+    ): void {
         InventoryMovement::create([
             'product_id' => $product->id,
             'warehouse_id' => $warehouse->id,
             'type' => $type->value,
             'direction' => $direction->value,
             'quantity' => $quantity,
+            'reference_type' => $reference?->getMorphClass(),
+            'reference_id' => $reference?->getKey(),
             'user_id' => $user?->id,
             'notes' => $notes,
         ]);
+    }
+
+    private function validateStock(
+        Product $product,
+        Warehouse $warehouse,
+        float $quantity,
+    ): void {
+        $available = $product->stockInWarehouse($warehouse);
+
+        if ($available < $quantity) {
+            throw ValidationException::withMessages([
+                'quantity' => sprintf(
+                    'Stock insuficiente para %s. Disponible: %s, solicitado: %s.',
+                    $product->name,
+                    $available,
+                    $quantity
+                ),
+            ]);
+        }
+    }
+
+    public function return(
+        Product $product,
+        Warehouse $warehouse,
+        float $quantity,
+        ?User $user = null,
+        ?string $notes = null,
+        ?Model $reference = null,
+    ): void {
+
+        if ($quantity <= 0) {
+            throw ValidationException::withMessages([
+                'quantity' => 'La cantidad debe ser mayor que cero.',
+            ]);
+        }
+
+        $this->createMovement(
+            $product,
+            $warehouse,
+            InventoryMovementType::Return,
+            InventoryMovementDirection::In,
+            $quantity,
+            $user,
+            $notes,
+            $reference,
+        );
     }
 }

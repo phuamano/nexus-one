@@ -8,6 +8,7 @@ use App\Models\InventoryMovement;
 use App\Models\Ventas\Sale;
 use App\Models\Ventas\SaleItem;
 use App\Services\Finanzas\AccountReceivableService;
+use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -15,6 +16,7 @@ class SaleService
 {
     public function __construct(
         private readonly AccountReceivableService $accountReceivableService,
+        private readonly InventoryService $inventoryService,
     ) {
     }
     /**
@@ -89,11 +91,19 @@ class SaleService
             $sale->load([
                 'saleItems.product',
                 'warehouse',
+                'user'
             ]);
 
-            $this->validateStock($sale);
-
-            $this->createInventoryMovements($sale);
+            foreach ($sale->saleItems as $item) {
+                $this->inventoryService->exit(
+                    $item->product,
+                    $sale->warehouse,
+                    (float) $item->quantity,
+                    $sale->user,
+                    "Salida por venta {$sale->reference}",
+                    $sale,
+                );
+            }
 
             $sale->update([
                 'status' => SaleStatus::CONFIRMED,
@@ -101,6 +111,8 @@ class SaleService
 
             $this->accountReceivableService
                 ->createFromSale($sale);
+
+
 
             return $sale->fresh([
                 'customer',
@@ -129,18 +141,17 @@ class SaleService
             $sale->load('saleItems');
 
             foreach ($sale->saleItems as $item) {
-                InventoryMovement::create([
-                    'product_id' => $item->product_id,
-                    'warehouse_id' => $sale->warehouse_id,
-                    'type' => 'sale_return',
-                    'direction' => 'in',
-                    'quantity' => $item->quantity,
-                    'reference_type' => Sale::class,
-                    'reference_id' => $sale->id,
-                    'notes' => "Reversión por cancelación de venta {$sale->reference}",
-                    'user_id' => $sale->user_id,
-                ]);
+                $this->inventoryService->return(
+                    $item->product,
+                    $sale->warehouse,
+                    (float) $item->quantity,
+                    $sale->user,
+                    "Reversión por cancelación de venta {$sale->reference}",
+                    $sale,
+                );
             }
+
+
 
             $sale->update([
                 'status' => SaleStatus::CANCELLED,
@@ -185,62 +196,6 @@ class SaleService
         }
     }
 
-    /**
-     * Valida el stock disponible antes de confirmar.
-     */
-    private function validateStock(Sale $sale): void
-    {
-        $quantities = [];
-
-        foreach ($sale->saleItems as $item) {
-            $quantities[$item->product_id] =
-                ($quantities[$item->product_id] ?? 0)
-                + (float) $item->quantity;
-        }
-
-        foreach ($quantities as $productId => $quantity) {
-
-            $item = $sale->saleItems
-                ->firstWhere('product_id', $productId);
-
-            $product = $item->product;
-
-            $available = $product->stockInWarehouse(
-                $sale->warehouse
-            );
-
-            if ($available < $quantity) {
-                throw ValidationException::withMessages([
-                    'items' => sprintf(
-                        'Stock insuficiente para %s. Disponible: %s, solicitado: %s.',
-                        $product->name,
-                        $available,
-                        $quantity
-                    ),
-                ]);
-            }
-        }
-    }
-
-    /**
-     * Genera los movimientos de salida por la venta.
-     */
-    private function createInventoryMovements(Sale $sale): void
-    {
-        foreach ($sale->saleItems as $item) {
-            InventoryMovement::create([
-                'product_id' => $item->product_id,
-                'warehouse_id' => $sale->warehouse_id,
-                'type' => 'sale',
-                'direction' => 'out',
-                'quantity' => $item->quantity,
-                'reference_type' => Sale::class,
-                'reference_id' => $sale->id,
-                'notes' => "Salida por venta {$sale->reference}",
-                'user_id' => $sale->user_id,
-            ]);
-        }
-    }
 
     public function update(Sale $sale, array $data): Sale
     {
