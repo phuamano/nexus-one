@@ -14,3 +14,11 @@ fix-permissions:
 
 migrate:
 	php artisan migrate
+
+# Comando base de Docker
+ARTISAN = docker compose exec app php artisan
+
+# Ejecutar cualquier comando de artisan
+# Uso: make artisan cmd="make:class Services/Finanzas/FinancialMovementService"
+artisan:
+	@$(ARTISAN) $(cmd)

@@ -52,7 +52,8 @@ class DatabaseSeeder extends Seeder
             TaxSeeder::class,
             SupplierSeeder::class,
             PurchaseSeeder::class,
-            CustomerSeeder::class
+            CustomerSeeder::class,
+            FinancialAccountSeeder::class,
         ]);
     }
 }

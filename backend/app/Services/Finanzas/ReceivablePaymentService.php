@@ -6,6 +6,7 @@ namespace App\Services\Finanzas;
 
 use App\Enums\Finanzas\AccountReceivableStatus;
 use App\Models\Finanzas\AccountReceivable;
+use App\Models\Finanzas\FinancialAccount;
 use App\Models\Finanzas\ReceivablePayment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -13,8 +14,14 @@ use Illuminate\Validation\ValidationException;
 
 class ReceivablePaymentService
 {
+
+    public function __construct(
+        private readonly FinancialService $financialService,
+    ) {
+    }
     public function pay(
         AccountReceivable $account,
+        FinancialAccount $financialAccount,
         float $amount,
         string $method,
         ?string $reference = null,
@@ -23,6 +30,7 @@ class ReceivablePaymentService
     ): ReceivablePayment {
         return DB::transaction(function () use (
             $account,
+            $financialAccount,
             $amount,
             $method,
             $reference,
@@ -68,6 +76,14 @@ class ReceivablePaymentService
                 'reference' => $reference,
                 'notes' => $notes,
             ]);
+
+            $this->financialService->income(
+                $financialAccount,
+                $amount,
+                $user,
+                $reference,
+                $notes
+            );
 
             $paidAmount = (float) $account->paid_amount + $amount;
             $newBalance = (float) $account->amount - $paidAmount;

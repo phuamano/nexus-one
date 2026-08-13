@@ -6,6 +6,7 @@ namespace App\Services\Finanzas;
 
 use App\Enums\Finanzas\AccountPayableStatus;
 use App\Models\Finanzas\AccountPayable;
+use App\Models\Finanzas\FinancialAccount;
 use App\Models\Finanzas\PayablePayment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -13,8 +14,13 @@ use Illuminate\Validation\ValidationException;
 
 class PayablePaymentService
 {
+    public function __construct(
+        private readonly FinancialService $financialService,
+    ) {
+    }
     public function pay(
         AccountPayable $account,
+        FinancialAccount $financialAccount,
         float $amount,
         string $method,
         ?string $reference = null,
@@ -24,6 +30,7 @@ class PayablePaymentService
 
         return DB::transaction(function () use (
             $account,
+            $financialAccount,
             $amount,
             $method,
             $reference,
@@ -73,6 +80,14 @@ class PayablePaymentService
                 'reference' => $reference,
                 'notes' => $notes,
             ]);
+
+            $this->financialService->expense(
+                $financialAccount,
+                $amount,
+                $user,
+                $reference,
+                $notes
+            );
 
             $account->update([
                 'paid_amount' => $paidAmount,
