@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Finanzas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Finanzas\AccountPayable;
+use App\Models\Finanzas\FinancialAccount;
 use App\Services\Finanzas\PayablePaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,14 +25,19 @@ class PayablePaymentController extends Controller
         $account = AccountPayable::query()->findOrFail($id);
 
         $data = $request->validate([
+            'financial_account_id' => ['required', 'uuid'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'payment_method' => ['required', 'string', 'max:50'],
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 
+        $financialAccount = FinancialAccount::query()
+            ->findOrFail($data['financial_account_id']);
+
         $payment = $this->paymentService->pay(
             $account,
+            $financialAccount,
             $data['amount'],
             $data['payment_method'],
             $data['reference'] ?? null,

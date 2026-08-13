@@ -9,6 +9,7 @@ use App\Enums\Finanzas\FinancialMovementType;
 use App\Models\Finanzas\FinancialAccount;
 use App\Models\Finanzas\FinancialMovement;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,6 +21,7 @@ class FinancialService
         ?User $user = null,
         ?string $reference = null,
         ?string $notes = null,
+        ?Model $referenceModel = null
     ): FinancialMovement {
         return DB::transaction(function () use (
             $account,
@@ -27,6 +29,7 @@ class FinancialService
             $user,
             $reference,
             $notes,
+            $referenceModel
         ) {
             return $this->createMovement(
                 $account,
@@ -36,6 +39,7 @@ class FinancialService
                 $user,
                 $reference,
                 $notes,
+                $referenceModel,
             );
         });
     }
@@ -46,6 +50,7 @@ class FinancialService
         ?User $user = null,
         ?string $reference = null,
         ?string $notes = null,
+        ?Model $referenceModel = null
     ): FinancialMovement {
         return DB::transaction(function () use (
             $account,
@@ -53,6 +58,7 @@ class FinancialService
             $user,
             $reference,
             $notes,
+            $referenceModel
         ) {
             $this->validateAmount($amount);
 
@@ -75,6 +81,7 @@ class FinancialService
                 $user,
                 $reference,
                 $notes,
+                $referenceModel,
             );
         });
     }
@@ -86,6 +93,7 @@ class FinancialService
         ?User $user = null,
         ?string $reference = null,
         ?string $notes = null,
+        ?Model $referenceModel = null
     ): void {
         DB::transaction(function () use (
             $from,
@@ -94,6 +102,7 @@ class FinancialService
             $user,
             $reference,
             $notes,
+            $referenceModel
         ) {
             $this->validateAmount($amount);
 
@@ -122,6 +131,7 @@ class FinancialService
                 $user,
                 $reference ?? 'TRANSFER_OUT',
                 $notes,
+                $referenceModel,
             );
 
             $this->createMovement(
@@ -132,6 +142,7 @@ class FinancialService
                 $user,
                 $reference ?? 'TRANSFER_IN',
                 $notes,
+                $referenceModel,
             );
         });
     }
@@ -143,6 +154,7 @@ class FinancialService
         ?User $user = null,
         ?string $reference = null,
         ?string $notes = null,
+        ?Model $referenceModel = null
     ): FinancialMovement {
         return DB::transaction(function () use (
             $account,
@@ -151,6 +163,7 @@ class FinancialService
             $user,
             $reference,
             $notes,
+            $referenceModel
         ) {
             $this->validateAmount($amount);
 
@@ -171,6 +184,7 @@ class FinancialService
                 $user,
                 $reference,
                 $notes,
+                $referenceModel,
             );
         });
     }
@@ -183,6 +197,7 @@ class FinancialService
         ?User $user = null,
         ?string $reference = null,
         ?string $notes = null,
+        ?Model $referenceModel = null
     ): FinancialMovement {
         $this->validateAmount($amount);
 
@@ -194,6 +209,8 @@ class FinancialService
             'amount' => $amount,
             'movement_date' => now()->toDateString(),
             'reference' => $reference,
+            'reference_type' => $referenceModel?->getMorphClass(),
+            'reference_id' => $referenceModel?->getKey(),
             'notes' => $notes,
         ]);
 

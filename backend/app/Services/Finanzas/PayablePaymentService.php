@@ -86,7 +86,8 @@ class PayablePaymentService
                 $amount,
                 $user,
                 $reference,
-                $notes
+                $notes,
+                $payment,
             );
 
             $account->update([
