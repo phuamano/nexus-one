@@ -9,6 +9,7 @@ use App\Models\Finanzas\AccountReceivable;
 use App\Models\Finanzas\FinancialAccount;
 use App\Models\Finanzas\ReceivablePayment;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -27,6 +28,7 @@ class ReceivablePaymentService
         ?string $reference = null,
         ?string $notes = null,
         ?User $user = null,
+        ?Model $referenceModel = null
     ): ReceivablePayment {
         return DB::transaction(function () use (
             $account,
@@ -82,7 +84,8 @@ class ReceivablePaymentService
                 $amount,
                 $user,
                 $reference,
-                $notes
+                $notes,
+                $payment,
             );
 
             $paidAmount = (float) $account->paid_amount + $amount;
