@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Compras;
 
-use App\Enums\Compras\PurchaseStatus;
 use App\Services\CurrentCompany;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 
 class UpdatePurchaseRequest extends FormRequest
 {
@@ -49,11 +47,6 @@ class UpdatePurchaseRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-            ],
-
-            'status' => [
-                'required',
-                new Enum(PurchaseStatus::class),
             ],
 
             'notes' => [
