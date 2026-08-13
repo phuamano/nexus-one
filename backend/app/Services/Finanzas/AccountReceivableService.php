@@ -40,4 +40,37 @@ class AccountReceivableService
             'notes' => "Cuenta por cobrar de venta {$sale->reference}",
         ]);
     }
+
+    public function cancelFromSale(Sale $sale): void
+    {
+        $account = AccountReceivable::where(
+            'sale_id',
+            $sale->id
+        )->first();
+
+        if (! $account) {
+            return;
+        }
+
+        if ($account->status === AccountReceivableStatus::CANCELLED) {
+            return;
+        }
+
+        if ($account->status === AccountReceivableStatus::PARTIAL) {
+            throw ValidationException::withMessages([
+                'sale' => 'No se puede cancelar la venta porque la cuenta por cobrar tiene pagos registrados.',
+            ]);
+        }
+
+        if ($account->status === AccountReceivableStatus::PAID) {
+            throw ValidationException::withMessages([
+                'sale' => 'No se puede cancelar la venta porque la cuenta por cobrar ya está pagada.',
+            ]);
+        }
+
+        $account->update([
+            'status' => AccountReceivableStatus::CANCELLED,
+            'balance' => 0,
+        ]);
+    }
 }

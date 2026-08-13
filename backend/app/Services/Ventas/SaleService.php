@@ -151,6 +151,8 @@ class SaleService
                 );
             }
 
+            $this->accountReceivableService
+                ->cancelFromSale($sale);
 
 
             $sale->update([

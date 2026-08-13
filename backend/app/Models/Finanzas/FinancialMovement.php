@@ -10,6 +10,7 @@ use App\Models\TenantModel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 #[Fillable([
     'company_id',
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'type',
     'direction',
+    'reference_type',
+    'reference_id',
     'amount',
     'movement_date',
     'reference',
@@ -45,5 +48,10 @@ class FinancialMovement extends TenantModel
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reference(): MorphTo
+    {
+        return $this->morphTo();
     }
 }

@@ -124,4 +124,77 @@ class FinancialReportService
             ],
         ];
     }
+
+    public function financialAccountsSummary(): array
+    {
+        $accounts = \App\Models\Finanzas\FinancialAccount::query()
+            ->where('is_active', true)
+            ->get();
+
+        return [
+            'total_accounts' => $accounts->count(),
+
+            'cash' => (float) $accounts
+                ->where('type', \App\Enums\Finanzas\FinancialAccountType::CASH)
+                ->sum(fn ($account) => (float) $account->current_balance),
+
+            'bank' => (float) $accounts
+                ->where('type', \App\Enums\Finanzas\FinancialAccountType::BANK)
+                ->sum(fn ($account) => (float) $account->current_balance),
+
+            'total_balance' => (float) $accounts
+                ->sum(fn ($account) => (float) $account->current_balance),
+
+            'accounts' => $accounts->map(fn ($account) => [
+                'id' => $account->id,
+                'name' => $account->name,
+                'code' => $account->code,
+                'type' => $account->type->value,
+                'currency' => $account->currency,
+                'balance' => (float) $account->current_balance,
+            ])->values()->all(),
+        ];
+    }
+
+    public function cashFlowSummary(): array
+    {
+        $movements = \App\Models\Finanzas\FinancialMovement::query()
+            ->selectRaw('
+            direction,
+            COALESCE(SUM(amount), 0) as total
+        ')
+            ->groupBy('direction')
+            ->get()
+            ->keyBy('direction');
+
+        $income = (float) ($movements['in']->total ?? 0);
+        $expense = (float) ($movements['out']->total ?? 0);
+
+        return [
+            'income' => $income,
+            'expense' => $expense,
+            'net' => $income - $expense,
+        ];
+    }
+
+    public function recentMovements(int $limit = 10): array
+    {
+        return \App\Models\Finanzas\FinancialMovement::query()
+            ->with('account')
+            ->latest('movement_date')
+            ->latest('created_at')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($movement) => [
+                'id' => $movement->id,
+                'date' => $movement->movement_date->toDateString(),
+                'account' => $movement->account->name,
+                'type' => $movement->type->value,
+                'direction' => $movement->direction->value,
+                'amount' => (float) $movement->amount,
+                'reference' => $movement->reference,
+                'notes' => $movement->notes,
+            ])
+            ->all();
+    }
 }
