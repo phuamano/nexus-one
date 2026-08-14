@@ -13,10 +13,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
 #[Fillable(['company_id','name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends BaseAuthenticatable
+class User extends BaseAuthenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles,HasApiTokens;
@@ -41,5 +43,10 @@ class User extends BaseAuthenticatable
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->company_id !== null;
     }
 }

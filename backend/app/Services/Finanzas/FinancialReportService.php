@@ -6,6 +6,7 @@ namespace App\Services\Finanzas;
 
 use App\Models\Finanzas\AccountPayable;
 use App\Models\Finanzas\AccountReceivable;
+use App\Models\Finanzas\FinancialMovement;
 
 class FinancialReportService
 {
@@ -196,5 +197,56 @@ class FinancialReportService
                 'notes' => $movement->notes,
             ])
             ->all();
+    }
+
+    public function cashFlowByMonth(int $months = 6): array
+    {
+        $startDate = now()
+            ->startOfMonth()
+            ->subMonths($months - 1);
+
+        $movements = FinancialMovement::query()
+            ->whereDate('movement_date', '>=', $startDate)
+            ->selectRaw("
+            DATE_TRUNC('month', movement_date) as month,
+            direction,
+            COALESCE(SUM(amount), 0) as total
+        ")
+            ->groupByRaw("DATE_TRUNC('month', movement_date), direction")
+            ->orderByRaw("DATE_TRUNC('month', movement_date)")
+            ->get();
+
+        $result = [];
+
+        for ($i = 0; $i < $months; $i++) {
+            $date = $startDate->copy()->addMonths($i);
+
+            $key = $date->format('Y-m');
+
+            $result[$key] = [
+                'label' => $date->translatedFormat('M Y'),
+                'income' => 0.0,
+                'expense' => 0.0,
+            ];
+        }
+
+        foreach ($movements as $movement) {
+            $key = \Carbon\Carbon::parse($movement->month)
+                ->format('Y-m');
+
+            if (! isset($result[$key])) {
+                continue;
+            }
+
+            if ($movement->direction === 'in') {
+                $result[$key]['income'] = (float) $movement->total;
+            }
+
+            if ($movement->direction === 'out') {
+                $result[$key]['expense'] = (float) $movement->total;
+            }
+        }
+
+        return array_values($result);
     }
 }
